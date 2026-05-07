@@ -24,9 +24,10 @@ export const sendSOSEmail = async (
   };
   try {
     await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    console.log("SOS email sent to", emergencyContactEmail);
     return { success: true };
   } catch (error) {
-    console.error("EmailJS error:", error);
+    console.error("SOS email failed:", error);
     return { success: false };
   }
 };
@@ -38,22 +39,22 @@ export const sendBoardingEmail = async (
   busLatitude: number,
   busLongitude: number
 ) : Promise<{ success: boolean }> => {
-  const locationLink = `https://www.openstreetmap.org/?mlat=${busLatitude}&mlon=${busLongitude}#map=18/${busLatitude}/${busLongitude}`;
-  const time = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const BOARDING_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_BOARDING_TEMPLATE_ID as string;
   const templateParams = {
     to_email: emergencyContactEmail,
     user_name: userName,
     bus_number: busNumber,
-    time,
+    time: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
     latitude: busLatitude.toString(),
     longitude: busLongitude.toString(),
-    location_link: locationLink,
+    location_link: "https://www.openstreetmap.org/?mlat=" + busLatitude + "&mlon=" + busLongitude + "#map=18/" + busLatitude + "/" + busLongitude,
   };
   try {
-    await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    await emailjs.send(SERVICE_ID, BOARDING_TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    console.log("Boarding email sent to", emergencyContactEmail);
     return { success: true };
   } catch (error) {
-    console.error("EmailJS boarding email error:", error);
+    console.error("Boarding email failed:", error);
     return { success: false };
   }
 };

@@ -1,4 +1,4 @@
-import { doc, getDoc, serverTimestamp, setDoc, collection } from "firebase/firestore";
+import { addDoc, doc, getDoc, serverTimestamp, collection } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { FaCheckCircle, FaShieldAlt } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -7,9 +7,10 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../firebase";
 import { sendSOSEmail } from "../../utils/emailService";
+import { getCurrentLocation } from "../../utils/locationService";
 
 export default function SOSPage() {
-  const { currentUser, userData } = useAuth();
+  const { currentUser } = useAuth();
   const { state } = useLocation() as any;
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -22,20 +23,22 @@ export default function SOSPage() {
   const busNumber = state?.busNumber || "Unknown";
 
   useEffect(() => {
-    if (!currentUser) return;
-    navigator.geolocation.getCurrentPosition((p) => setCoords({ lat: p.coords.latitude, lng: p.coords.longitude }), () => toast.error("Location unavailable"));
-    if (userData?.name) {
-      setName(userData.name || "Passenger");
-      setContacts(userData.emergencyContacts || []);
+    const load = async () => {
+      if (!currentUser) return;
+      try {
+        const location = await getCurrentLocation();
+        console.log("SOSPage: location obtained", location);
+        setCoords({ lat: location.latitude, lng: location.longitude });
+      } catch (error: any) {
+        toast.error(error?.message || "Location unavailable");
+      }
+      const s = await getDoc(doc(db, "users", currentUser.uid));
+      setName(s.data()?.name || "Passenger");
+      setContacts(s.data()?.emergencyContacts || []);
       setLoading(false);
-    } else {
-      getDoc(doc(db, "users", currentUser.uid)).then((s) => {
-        setName(s.data()?.name || "Passenger");
-        setContacts(s.data()?.emergencyContacts || []);
-        setLoading(false);
-      });
-    }
-  }, [currentUser, userData]);
+    };
+    load();
+  }, [currentUser]);
 
   const locationLink = useMemo(() => coords ? `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lng}#map=18/${coords.lat}/${coords.lng}` : "", [coords]);
   const submit = async () => {
@@ -49,14 +52,13 @@ export default function SOSPage() {
       const result = await sendSOSEmail(name, busNumber, c.contactEmail, coords.lat, coords.lng);
       if (!result.success) allSuccess = false;
     }
-    const alertRef = doc(collection(db, "sos_alerts"));
-    await setDoc(alertRef, { alertId: alertRef.id, userId: currentUser.uid, passengerName: name, busNumber, latitude: coords.lat, longitude: coords.lng, timestamp: serverTimestamp(), emergencyContactEmail: contactEmails.join(","), status: "sent", locationLink });
+    await addDoc(collection(db, "sos_alerts"), { userId: currentUser.uid, passengerName: name, busNumber, latitude: coords.lat, longitude: coords.lng, timestamp: serverTimestamp(), emergencyContactEmail: contactEmails.join(", "), status: "sent", locationLink });
     if (allSuccess) { toast.success("Emergency alert sent successfully."); setSent(true); }
     else { toast.error("Emergency recorded but email delivery failed."); setFailed(true); }
     setSending(false);
   };
   if (loading) return <LoadingSpinner />;
-  if (!contacts.length) return <div className="page-wrap"><p>You have no emergency contacts. Please add contacts first.</p><button className="gradient-btn" onClick={() => navigate("/passenger/contacts")}>Go to Contacts</button></div>;
+  if (!contacts.length) return <div className="page-wrap"><p>You have no emergency contacts added. Please add contacts first.</p><button className="gradient-btn" onClick={() => navigate("/passenger/contacts")}>Go to Contacts</button></div>;
   return (
     <div className="page-wrap" style={{ minHeight: "100vh", background: "linear-gradient(180deg,#8E0038,#E91E8C)", color: "#fff", display: "grid", placeItems: "center", gap: 12 }}>
       <FaShieldAlt size={54} />

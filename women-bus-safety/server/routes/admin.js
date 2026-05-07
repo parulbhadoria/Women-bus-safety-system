@@ -40,13 +40,42 @@ router.get("/sos-alerts", async (_req, res) => {
 
 router.post("/assign-bus", async (req, res) => {
   try {
-    const { driverUid, busNumber } = req.body || {};
-    if (!driverUid || !busNumber) return res.status(400).json({ error: "driverUid and busNumber are required" });
-    await db.collection("drivers").doc(driverUid).update({ assignedBus: busNumber });
-    await db.collection("buses").doc(busNumber).update({ assignedDriverUid: driverUid });
-    return res.json({ success: true });
-  } catch {
-    return res.status(500).json({ error: "Failed to assign bus" });
+    const { driverUid, busNumber } = req.body;
+
+    if (!driverUid || !busNumber) {
+      return res.status(400).json({ error: "driverUid and busNumber are required" });
+    }
+
+    const { db } = require("../config/firebase");
+
+    const driversSnapshot = await db.collection("drivers")
+      .where("uid", "==", driverUid)
+      .limit(1)
+      .get();
+
+    if (driversSnapshot.empty) {
+      return res.status(404).json({ error: "Driver not found" });
+    }
+
+    const driverDocRef = driversSnapshot.docs[0].ref;
+    await driverDocRef.update({ assignedBus: busNumber });
+
+    const busesSnapshot = await db.collection("buses")
+      .where("busNumber", "==", busNumber)
+      .limit(1)
+      .get();
+
+    if (busesSnapshot.empty) {
+      return res.status(404).json({ error: "Bus not found" });
+    }
+
+    const busDocRef = busesSnapshot.docs[0].ref;
+    await busDocRef.update({ assignedDriverUid: driverUid });
+
+    return res.status(200).json({ success: true, message: "Bus assigned successfully" });
+  } catch (error) {
+    console.error("Assign bus error:", error);
+    return res.status(500).json({ error: "Failed to assign bus. Please try again." });
   }
 });
 

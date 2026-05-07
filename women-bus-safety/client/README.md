@@ -44,3 +44,12 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+## Deploy To Firebase Hosting
+
+1. Install CLI: `npm install -g firebase-tools`
+2. Login: `firebase login`
+3. Build app: `cd client && npm run build`
+4. Deploy hosting: `firebase deploy --only hosting`
+
+After backend deployment on Render, update `REACT_APP_BACKEND_URL` in `client/.env` to your Render backend URL, then rebuild/redeploy frontend.

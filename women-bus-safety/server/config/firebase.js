@@ -7,14 +7,26 @@ const serviceAccountPath = path.resolve(
   "..",
   process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "./serviceaccountkey.json"
 );
-const serviceAccount = require(serviceAccountPath);
+let serviceAccount = null;
+try {
+  serviceAccount = require(serviceAccountPath);
+} catch (error) {
+  console.error("Failed to parse Firebase service account file, falling back to default credentials:", error.message);
+}
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+  const baseConfig = {
     databaseURL:
       "https://women-bus-safety-default-rtdb.asia-southeast1.firebasedatabase.app",
-  });
+  };
+  if (serviceAccount) {
+    admin.initializeApp({
+      ...baseConfig,
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } else {
+    admin.initializeApp(baseConfig);
+  }
 }
 
 const db = admin.firestore();

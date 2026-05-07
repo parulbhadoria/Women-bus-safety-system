@@ -12,9 +12,10 @@ type AuthType = {
   userData: any;
   loading: boolean;
   logout: () => Promise<void>;
+  forceRefresh: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthType>({} as AuthType);
+export const AuthContext = createContext<AuthType>({} as AuthType);
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -55,6 +56,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate("/login");
   };
 
+  const forceRefresh = async () => {
+    if (!currentUser) return;
+    try {
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        setUserRole((data.role as Role) || null);
+        setUserData(data);
+      } else {
+        setUserRole(null);
+        setUserData(null);
+      }
+    } catch {
+      setUserRole(null);
+      setUserData(null);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
-  return <AuthContext.Provider value={{ currentUser, userRole, userData, loading, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ currentUser, userRole, userData, loading, logout, forceRefresh }}>{children}</AuthContext.Provider>;
 };

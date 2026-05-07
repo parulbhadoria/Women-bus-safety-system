@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "./LoadingSpinner";
@@ -6,8 +6,20 @@ import LoadingSpinner from "./LoadingSpinner";
 const ProtectedRoute: React.FC<{ role: "passenger" | "driver" | "admin"; children: React.ReactElement }> = ({ role, children }) => {
   const navigate = useNavigate();
   const { currentUser, userRole, loading } = useAuth();
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!loading && currentUser && userRole === null) {
+      setTimedOut(false);
+      const timer = setTimeout(() => setTimedOut(true), 3000);
+      return () => clearTimeout(timer);
+    }
+    setTimedOut(false);
+  }, [loading, currentUser, userRole]);
+
   if (loading) return <LoadingSpinner />;
   if (!currentUser) return <Navigate to="/login" replace />;
+  if (userRole === null && !timedOut) return <LoadingSpinner />;
   if (userRole !== role) return (
     <div className="page-wrap" style={{ display: "grid", placeItems: "center" }}>
       <div className="glass-card" style={{ padding: 24, width: "min(420px, 100%)", textAlign: "center" }}>

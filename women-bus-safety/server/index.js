@@ -16,7 +16,12 @@ require("./config/firebase");
 const app = express();
 const port = Number(process.env.PORT) || 5000;
 
-app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+app.options(/.*/, cors());
 app.use(express.json());
 
 app.get("/", (_req, res) => res.json({ message: "Women Bus Safety API running" }));

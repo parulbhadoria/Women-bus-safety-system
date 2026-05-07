@@ -8,6 +8,7 @@ import MapComponent from "../../components/MapComponent";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useAuth } from "../../context/AuthContext";
 import { db, rtdb } from "../../firebase";
+import { getCurrentLocation, watchLocation } from "../../utils/locationService";
 
 export default function DriverDuty() {
   const { currentUser } = useAuth();
@@ -28,45 +29,57 @@ export default function DriverDuty() {
       const assignedBus = driverSnap.data()?.assignedBus || "";
       setBusNumber(assignedBus);
       if (!assignedBus) return;
+
       await updateDoc(doc(db, "drivers", currentUser.uid), { isActive: true });
       await updateDoc(doc(db, "buses", assignedBus), { isActive: true, femalePassengerCount: increment(0) });
+
+      await set(ref(rtdb, `bus_locations/${assignedBus}`), {
+        isActive: true,
+        latitude: 0,
+        longitude: 0,
+        timestamp: Date.now(),
+        driverUid: currentUser.uid,
+      });
+
       window.addEventListener("beforeunload", handleBeforeUnload);
-      navigator.geolocation.getCurrentPosition(
-        (p) => setLoc({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => setPermissionDenied(true),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-      watchIdRef.current = navigator.geolocation.watchPosition((p) => {
-        const next = { lat: p.coords.latitude, lng: p.coords.longitude };
-        setLoc(next);
-        const now = Date.now();
-        if (now - lastWriteRef.current >= 5000 && currentUser && assignedBus) {
-          lastWriteRef.current = now;
-          set(ref(rtdb, `bus_locations/${assignedBus}`), { latitude: next.lat, longitude: next.lng, timestamp: now, driverUid: currentUser.uid, isActive: true });
-          setUpdates((v) => v + 1);
+      try {
+        const initial = await getCurrentLocation();
+        setLoc({ lat: initial.latitude, lng: initial.longitude });
+      } catch {
+        setPermissionDenied(true);
+      }
+      watchIdRef.current = watchLocation(
+        (coords) => {
+          const next = { lat: coords.latitude, lng: coords.longitude };
+          setLoc(next);
+          const now = Date.now();
+          if (now - lastWriteRef.current >= 5000 && currentUser && assignedBus) {
+            lastWriteRef.current = now;
+            console.log("DriverDuty: writing location to RTDB", next);
+            set(ref(rtdb, `bus_locations/${assignedBus}`), { latitude: next.lat, longitude: next.lng, timestamp: now, driverUid: currentUser.uid, isActive: true });
+            setUpdates((v) => v + 1);
+          }
+        },
+        (message) => {
+          toast.error(message);
+          setPermissionDenied(true);
         }
-      }, () => setPermissionDenied(true), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+      );
     };
     init();
     return () => {
-      cleanup();
+      if (watchIdRef.current !== null && watchIdRef.current !== -1) navigator.geolocation.clearWatch(watchIdRef.current);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
     e.preventDefault();
-    e.returnValue = "You are currently sharing your bus location. Are you sure you want to leave?";
+    e.returnValue = "You are currently sharing bus location. Ending duty will remove the bus from passenger tracking. Are you sure?";
   };
 
   const cleanup = async () => {
-    if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
-    if (busNumber && currentUser) {
-      await set(ref(rtdb, `bus_locations/${busNumber}`), { isActive: false, driverUid: currentUser.uid, timestamp: Date.now(), latitude: loc?.lat || 0, longitude: loc?.lng || 0 });
-      await updateDoc(doc(db, "drivers", currentUser.uid), { isActive: false });
-      try { await updateDoc(doc(db, "buses", busNumber), { isActive: false }); } catch {}
-    }
+    if (watchIdRef.current !== null && watchIdRef.current !== -1) navigator.geolocation.clearWatch(watchIdRef.current);
   };
 
   if (!busNumber) return <LoadingSpinner />;
@@ -76,9 +89,19 @@ export default function DriverDuty() {
     <div className="page-wrap" style={{ display: "grid", gap: 12 }}>
       <div className="glass-card" style={{ padding: 14, borderLeft: "6px solid #388E3C" }}>
         <strong>Sharing Location</strong> | Bus: {busNumber} | Updates Sent: {updates}
+        <div style={{ marginTop: 6, fontSize: 14 }}>Latitude: {loc?.lat ?? "-"} | Longitude: {loc?.lng ?? "-"}</div>
       </div>
       {loc ? <MapComponent center={[loc.lat, loc.lng]} zoom={15} markers={markers} height="55vh" /> : <LoadingSpinner />}
-      <button className="danger-btn" onClick={async () => { await cleanup(); toast.success("Duty ended"); navigate("/driver/home"); }}><FaStop /> End Duty</button>
+      <button className="danger-btn" onClick={async () => {
+        await cleanup();
+        if (busNumber && currentUser) {
+          await set(ref(rtdb, `bus_locations/${busNumber}`), { isActive: false, driverUid: currentUser.uid, timestamp: Date.now(), latitude: 0, longitude: 0 });
+          await updateDoc(doc(db, "drivers", currentUser.uid), { isActive: false });
+          try { await updateDoc(doc(db, "buses", busNumber), { isActive: false }); } catch {}
+        }
+        toast.success("Duty ended");
+        navigate("/driver/home");
+      }}><FaStop /> End Duty</button>
     </div>
   );
 }

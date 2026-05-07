@@ -1,4 +1,4 @@
-import { arrayRemove, arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { FaInfoCircle, FaTrash, FaUser } from "react-icons/fa";
 import { MdEmail, MdPersonAdd, MdPhone } from "react-icons/md";
@@ -12,13 +12,13 @@ export default function EmergencyContacts() {
   const [loading, setLoading] = useState(true);
   const [contacts, setContacts] = useState<any[]>([]);
   const [form, setForm] = useState({ contactName: "", contactPhone: "", contactEmail: "" });
-  const load = async () => {
+  useEffect(() => {
     if (!currentUser) return;
-    const s = await getDoc(doc(db, "users", currentUser.uid));
-    setContacts(s.data()?.emergencyContacts || []);
-    setLoading(false);
-  };
-  useEffect(() => { load(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    const unsub = onSnapshot(doc(db, "users", currentUser.uid), (snapshot) => {
+      setContacts(snapshot.data()?.emergencyContacts || []);
+      setLoading(false);
+    });
+    return () => unsub();
   }, [currentUser]);
   if (loading) return <LoadingSpinner />;
   return (
@@ -27,7 +27,7 @@ export default function EmergencyContacts() {
       {contacts.map((c, i) => (
         <div key={`${c.contactEmail}-${i}`} className="glass-card" style={{ padding: 12, borderLeft: "4px solid #E91E8C", display: "grid", gap: 4 }}>
           <p><FaUser /> {c.contactName}</p><p><MdPhone /> {c.contactPhone}</p><p><MdEmail /> {c.contactEmail}</p>
-          <button onClick={async () => { if (!currentUser) return; setLoading(true); await updateDoc(doc(db, "users", currentUser.uid), { emergencyContacts: arrayRemove(c) }); await load(); }} style={{ border: "1px solid #D32F2F", color: "#D32F2F", background: "#fff", borderRadius: 8, padding: "8px 10px", width: 120 }}><FaTrash /> Delete</button>
+          <button onClick={async () => { if (!currentUser) return; setLoading(true); await updateDoc(doc(db, "users", currentUser.uid), { emergencyContacts: arrayRemove(c) }); setLoading(false); }} style={{ border: "1px solid #D32F2F", color: "#D32F2F", background: "#fff", borderRadius: 8, padding: "8px 10px", width: 120 }}><FaTrash /> Delete</button>
         </div>
       ))}
       {contacts.length >= 3 ? <div style={{ background: "#FFF8E1", padding: 10, borderRadius: 10 }}><FaInfoCircle /> Maximum 3 contacts added.</div> : (
@@ -44,7 +44,7 @@ export default function EmergencyContacts() {
             setLoading(true);
             await updateDoc(doc(db, "users", currentUser.uid), { emergencyContacts: arrayUnion(form) });
             setForm({ contactName: "", contactPhone: "", contactEmail: "" });
-            await load();
+            setLoading(false);
           }}>Save</button>
         </div>
       )}

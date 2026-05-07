@@ -10,37 +10,53 @@ import { useAuth } from "../../context/AuthContext";
 import { db, getReadableFirebaseError, rtdb } from "../../firebase";
 import { calculateDistance } from "../../utils/haversine";
 import { sendBoardingEmail } from "../../utils/emailService";
+import { getCurrentLocation } from "../../utils/locationService";
 
 type Bus = { busNumber: string; latitude: number; longitude: number; distance: number; femalePassengerCount: number };
 export default function NearbyBuses() {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [buses, setBuses] = useState<Bus[]>([]);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const navigate = useNavigate();
   const load = async () => {
     setLoading(true);
-    navigator.geolocation.getCurrentPosition(async (p) => {
-      try {
-        const current = { lat: p.coords.latitude, lng: p.coords.longitude };
-        setCoords(current);
-        const snap = await get(ref(rtdb, "bus_locations"));
-        const raw = snap.val() || {};
-        const entries = Object.entries(raw).filter(([, d]: any) => d?.isActive);
-        const list: Bus[] = [];
-        for (const [busNumber, d] of entries as any[]) {
-          const busDoc = await getDoc(doc(db, "buses", busNumber));
-          list.push({ busNumber, latitude: d.latitude, longitude: d.longitude, distance: calculateDistance(current.lat, current.lng, d.latitude, d.longitude), femalePassengerCount: busDoc.data()?.femalePassengerCount || 0 });
-        }
-        setBuses(list.sort((a, b) => a.distance - b.distance));
-      } catch (error: any) {
-        toast.error(getReadableFirebaseError(error));
+    setGettingLocation(true);
+    try {
+      const location = await getCurrentLocation();
+      console.log("NearbyBuses: location obtained", location);
+      const current = { lat: location.latitude, lng: location.longitude };
+      setCoords(current);
+      setGettingLocation(false);
+
+      const snapshot = await get(ref(rtdb, "bus_locations"));
+      if (!snapshot.exists()) {
+        console.log("NearbyBuses: no active buses found in RTDB");
+        setBuses([]);
+        return;
       }
+
+      const raw = snapshot.val() || {};
+      const entries = Object.entries(raw).filter(([, d]: any) => d?.isActive === true);
+      console.log("NearbyBuses: buses fetched", entries.length);
+      const list: Bus[] = [];
+      for (const [busNumber, d] of entries as any[]) {
+        const busDoc = await getDoc(doc(db, "buses", busNumber));
+        const distance = calculateDistance(current.lat, current.lng, d.latitude, d.longitude);
+        console.log("NearbyBuses: distance calculated", { busNumber, distance });
+        list.push({ busNumber, latitude: d.latitude, longitude: d.longitude, distance, femalePassengerCount: busDoc.data()?.femalePassengerCount || 0 });
+      }
+      setBuses(list.sort((a, b) => a.distance - b.distance));
+    } catch (error: any) {
+      toast.error(error?.message || getReadableFirebaseError(error));
+    } finally {
+      setGettingLocation(false);
       setLoading(false);
-    }, () => { toast.error("Please enable location access to see nearby buses"); setLoading(false); });
+    }
   };
   useEffect(() => { load(); }, []);
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <div className="page-wrap" style={{ display: "grid", placeItems: "center", gap: 10 }}><LoadingSpinner inline />{gettingLocation ? <p>Getting your location...</p> : null}</div>;
   return (
     <div className="page-wrap" style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "linear-gradient(135deg, rgba(123,45,139,0.85), rgba(233,30,140,0.75)), url(https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1200&q=80) center/cover no-repeat", color: "#fff", borderRadius: 16, padding: 16 }}>
@@ -63,8 +79,7 @@ export default function NearbyBuses() {
                 if (!currentUser || !coords) return;
                 try {
                   await updateDoc(doc(db, "buses", bus.busNumber), { femalePassengerCount: increment(1) });
-                  const journeyRef = await addDoc(collection(db, "journeys"), { passengerId: currentUser.uid, busNumber: bus.busNumber, source: "Current Location", destination: "Destination", boardingTime: serverTimestamp(), completionTime: null, status: "active" });
-                  await updateDoc(doc(db, "journeys", journeyRef.id), { journeyId: journeyRef.id });
+                  const journeyRef = await addDoc(collection(db, "journeys"), { passengerId: currentUser.uid, busNumber: bus.busNumber, source: "Current Location", destination: "Destination", boardingTime: serverTimestamp(), status: "active" });
                   const userSnap = await getDoc(doc(db, "users", currentUser.uid));
                   const contacts = userSnap.data()?.emergencyContacts || [];
                   for (const c of contacts) if (c.contactEmail) await sendBoardingEmail(userSnap.data()?.name || "Passenger", bus.busNumber, c.contactEmail, bus.latitude, bus.longitude);
