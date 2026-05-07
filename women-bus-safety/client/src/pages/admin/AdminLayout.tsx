@@ -21,15 +21,79 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const isMobile = typeof window !== "undefined" ? window.innerWidth <= 768 : false;
   const sidebarVisible = !isMobile || open;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "260px 1fr", minHeight: "calc(100vh - 64px)" }}>
-      {isMobile && <button style={{ position: "fixed", left: 10, top: 74, zIndex: 1001, border: "none", borderRadius: 8, background: "#7B2D8B", color: "#fff", padding: 10 }} onClick={() => setOpen(!open)}><FaBars /></button>}
-      <aside style={{ background: "#7B2D8B", color: "#fff", padding: 16, display: sidebarVisible ? "grid" : "none", position: isMobile ? "fixed" : "sticky", top: isMobile ? 64 : 0, inset: isMobile ? "64px auto 0 0" : "auto", width: 260, zIndex: 1000, height: isMobile ? "calc(100vh - 64px)" : "calc(100vh - 64px)" }}>
-        <h2 style={{ display: "flex", gap: 8, alignItems: "center" }}><FaBus /> Women Bus Safety</h2>
-        {links.map((l) => <NavLink key={l.to} to={l.to} style={({ isActive }) => ({ color: isActive ? "#7B2D8B" : "#fff", background: isActive ? "#fff" : "transparent", padding: "10px 12px", borderRadius: 8, margin: "4px 0", display: "flex", gap: 8, alignItems: "center" })}>{l.icon} {l.label}</NavLink>)}
-        <button style={{ marginTop: "auto", border: "1px solid #fff", color: "#fff", background: "transparent", padding: 10, borderRadius: 8 }} onClick={async () => { await logout(); navigate("/login"); }}><FaSignOutAlt /> Logout</button>
+    <div className={`flex min-h-screen ${isMobile ? 'flex-col' : ''}`}>
+      {/* Mobile Menu Toggle */}
+      {isMobile && (
+        <button 
+          className="fixed left-4 top-20 z-50 bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 rounded-lg shadow-lg hover:shadow-purple-300 transition-all duration-200"
+          onClick={() => setOpen(!open)}
+        >
+          <FaBars />
+        </button>
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        ${isMobile ? 'fixed top-16 left-0 h-screen z-40' : 'sticky top-0'}
+        ${sidebarVisible ? 'translate-x-0' : isMobile ? '-translate-x-full' : ''}
+        w-64 bg-gradient-to-b from-purple-800 to-purple-900 text-white p-6 transition-transform duration-300 ease-in-out
+        ${isMobile ? 'shadow-2xl' : 'shadow-xl'}
+      `}>
+        {/* Logo */}
+        <div className="flex items-center space-x-3 mb-8">
+          <div className="bg-white bg-opacity-20 p-2 rounded-lg backdrop-blur-sm">
+            <FaBus className="text-xl" />
+          </div>
+          <h2 className="text-lg font-bold">Women Bus Safety</h2>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="space-y-2 flex-1">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) => `
+                flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
+                ${isActive 
+                  ? 'bg-white bg-opacity-20 text-white shadow-lg' 
+                  : 'hover:bg-white hover:bg-opacity-10 text-purple-100'
+                }
+              `}
+            >
+              <span className="text-lg">{link.icon}</span>
+              <span className="font-medium">{link.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Logout Button */}
+        <button 
+          className="w-full mt-8 flex items-center justify-center space-x-2 px-4 py-3 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-lg transition-all duration-200 border border-white border-opacity-30"
+          onClick={async () => { 
+            await logout(); 
+            navigate("/login"); 
+          }}
+        >
+          <FaSignOutAlt />
+          <span className="font-medium">Logout</span>
+        </button>
       </aside>
-      {isMobile && sidebarVisible && <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 999 }} />}
-      <main style={{ marginLeft: 0 }}>{children}</main>
+
+      {/* Mobile Overlay */}
+      {isMobile && sidebarVisible && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1 bg-gray-50">
+        <div className="min-h-screen">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

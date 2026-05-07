@@ -32,22 +32,179 @@ const Register = () => {
     }
   };
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16, background: "linear-gradient(180deg,#F8F0FF,#FCE4EC)" }}>
-      <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} onSubmit={onSubmit} style={{ width: "min(520px, 100%)", background: "#fff", borderRadius: 20, boxShadow: "0 10px 30px rgba(123,45,139,0.15)", padding: 24, display: "grid", gap: 10 }}>
-        <h2 style={{ color: "#7B2D8B", display: "flex", gap: 8, alignItems: "center" }}><MdPersonAdd size={30} /> Register</h2>
-        <label><MdPerson /> Name</label><input placeholder="Name" onChange={(e) => setForm({ ...form, name: e.target.value })} required style={{ padding: 12, border: "1px solid #E1BEE7", borderRadius: 12 }} />
-        {errors.name && <small style={{ color: "#D32F2F" }}>{errors.name}</small>}
-        <label><MdEmail /> Email</label><input placeholder="Email" type="email" onChange={(e) => setForm({ ...form, email: e.target.value })} required style={{ padding: 12, border: "1px solid #E1BEE7", borderRadius: 12 }} />
-        {errors.email && <small style={{ color: "#D32F2F" }}>{errors.email}</small>}
-        <label><MdPhone /> Phone</label><input placeholder="Phone" onChange={(e) => setForm({ ...form, phone: e.target.value })} required style={{ padding: 12, border: "1px solid #E1BEE7", borderRadius: 12 }} />
-        {errors.phone && <small style={{ color: "#D32F2F" }}>{errors.phone}</small>}
-        <label><MdLock /> Password</label><input placeholder="Password" type="password" onChange={(e) => setForm({ ...form, password: e.target.value })} required style={{ padding: 12, border: "1px solid #E1BEE7", borderRadius: 12 }} />
-        {errors.password && <small style={{ color: "#D32F2F" }}>{errors.password}</small>}
-        <label><MdLock /> Confirm Password</label><input placeholder="Confirm password" type="password" onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required style={{ padding: 12, border: "1px solid #E1BEE7", borderRadius: 12 }} />
-        {errors.confirmPassword && <small style={{ color: "#D32F2F" }}>{errors.confirmPassword}</small>}
-        <motion.button whileTap={{ scale: 0.97 }} className="gradient-btn" disabled={loading}>{loading ? "Please wait..." : "Register"}</motion.button>
-        <Link to="/login" style={{ color: "#7B2D8B" }}>Already have an account?</Link>
-      </motion.form>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-pink-50">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+        <div className="glass-card p-8">
+          {/* Form Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center bg-purple-100 p-3 rounded-full mb-4">
+              <MdPersonAdd className="text-2xl text-purple-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Create Account</h2>
+            <p className="text-gray-600">Join our safety community</p>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-6">
+            {/* Name Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center space-x-2">
+                  <MdPerson className="text-purple-600" />
+                  <span>Full Name</span>
+                </div>
+              </label>
+              <input
+                placeholder="Enter your full name"
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white bg-opacity-50 backdrop-blur-sm"
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-500 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{errors.name}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center space-x-2">
+                  <MdEmail className="text-purple-600" />
+                  <span>Email Address</span>
+                </div>
+              </label>
+              <input
+                placeholder="Enter your email"
+                type="email"
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white bg-opacity-50 backdrop-blur-sm"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{errors.email}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Phone Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center space-x-2">
+                  <MdPhone className="text-purple-600" />
+                  <span>Phone Number</span>
+                </div>
+              </label>
+              <input
+                placeholder="Enter 10-digit phone number"
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white bg-opacity-50 backdrop-blur-sm"
+              />
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-500 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{errors.phone}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center space-x-2">
+                  <MdLock className="text-purple-600" />
+                  <span>Password</span>
+                </div>
+              </label>
+              <input
+                placeholder="Create a password (min 6 characters)"
+                type="password"
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white bg-opacity-50 backdrop-blur-sm"
+              />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-500 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{errors.password}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Confirm Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center space-x-2">
+                  <MdLock className="text-purple-600" />
+                  <span>Confirm Password</span>
+                </div>
+              </label>
+              <input
+                placeholder="Confirm your password"
+                type="password"
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                required
+                className="w-full px-4 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white bg-opacity-50 backdrop-blur-sm"
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-500 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{errors.confirmPassword}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              type="submit"
+              disabled={loading}
+              className="w-full gradient-btn py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Please wait...</span>
+                </div>
+              ) : (
+                "Register"
+              )}
+            </motion.button>
+
+            {/* Login Link */}
+            <div className="text-center">
+              <p className="text-gray-600">
+                Already have an account?{' '}
+                <Link 
+                  to="/login" 
+                  className="text-purple-600 font-semibold hover:text-purple-700 transition-colors"
+                >
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
+      </motion.div>
     </div>
   );
 };

@@ -10,45 +10,107 @@ const Navbar: React.FC = () => {
   if (["/login", "/register", "/register/role", "/register/aadhaar", "/register/license"].includes(location.pathname)) return null;
   const roleColor = userRole === "admin" ? "#FFD740" : userRole === "driver" ? "#69F0AE" : "#E91E8C";
   const links = userRole === "passenger"
-    ? [{ label: "Home", to: "/passenger/home" }, { label: "Nearby Buses", to: "/passenger/buses" }, { label: "My Journey", to: "/passenger/journey" }, { label: "Contacts", to: "/passenger/contacts" }]
+    ? [{ label: "Home", to: "/passenger/home" }, { label: "Nearby Buses", to: "/passenger/buses" }, { label: "Contacts", to: "/passenger/contacts" }]
     : userRole === "driver"
     ? [{ label: "Home", to: "/driver/home" }, { label: "My Duty", to: "/driver/duty" }]
     : [];
 
   return (
-    <nav style={{ background: "#7B2D8B", color: "#fff", height: 64, padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 999 }}>
-      <Link to="/" style={{ color: "#fff", display: "flex", gap: 8, alignItems: "center", fontWeight: 700, whiteSpace: "nowrap" }}>
-        <FaBus /> Women Bus Safety
-      </Link>
+    <nav className="bg-gradient-to-r from-purple-800 to-purple-900 text-white shadow-xl sticky top-0 z-50 backdrop-blur-lg bg-opacity-95">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link 
+            to="/" 
+            className="flex items-center space-x-3 font-bold text-xl hover:scale-105 transition-transform duration-200"
+          >
+            <div className="bg-white bg-opacity-20 p-2 rounded-lg backdrop-blur-sm">
+              <FaBus className="text-2xl" />
+            </div>
+            <span className="bg-gradient-to-r from-pink-200 to-purple-200 bg-clip-text text-transparent">
+              Women Bus Safety
+            </span>
+          </Link>
 
-      <div className="nav-middle" style={{ display: "flex", gap: 16, alignItems: "center" }}>
-        {links.map((link) => (
-          <Link key={link.to} to={link.to} style={{ color: "#fff", fontWeight: 500 }}>{link.label}</Link>
-        ))}
-      </div>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {links.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`relative px-3 py-2 text-sm font-medium rounded-lg hover:bg-white hover:bg-opacity-10 transition-all duration-200 hover:scale-105 ${
+                  location.pathname === link.to ? 'bg-white bg-opacity-20' : ''
+                }`}
+              >
+                {link.label}
+                {location.pathname === link.to && (
+                  <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-pink-400 rounded-full"></span>
+                )}
+              </Link>
+            ))}
+          </div>
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button className="nav-mobile-toggle" onClick={() => setMenuOpen((v) => !v)} style={{ background: "transparent", border: "none", color: "#fff", display: "none", fontSize: 18 }}>
-          {menuOpen ? <FaTimes /> : <FaBars />}
-        </button>
-        <span style={{ padding: "4px 10px", borderRadius: 999, background: roleColor, color: userRole === "admin" ? "#212121" : "#fff", fontWeight: 700 }}>{userRole || "user"}</span>
-        <span style={{ color: "#fff" }}>{userData?.name || "User"}</span>
-        <button onClick={logout} style={{ border: "1px solid #fff", color: "#fff", background: "transparent", borderRadius: 10, padding: "8px 10px", display: "flex", gap: 6, alignItems: "center" }}><FaSignOutAlt /> Logout</button>
-      </div>
+          {/* User Actions */}
+          <div className="flex items-center space-x-4">
+            {/* Mobile menu button */}
+            <button 
+              className="md:hidden p-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              {menuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+            </button>
 
-      {menuOpen && links.length > 0 && (
-        <div style={{ position: "absolute", top: 64, left: 0, right: 0, background: "#7B2D8B", borderTop: "1px solid rgba(255,255,255,0.2)", display: "grid", padding: 12, gap: 10 }}>
-          {links.map((link) => (
-            <Link key={`mobile-${link.to}`} to={link.to} style={{ color: "#fff" }} onClick={() => setMenuOpen(false)}>{link.label}</Link>
-          ))}
+            {/* Role Badge */}
+            <span 
+              className={`hidden sm:inline-block px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
+                userRole === "admin" 
+                  ? "bg-yellow-400 text-gray-900" 
+                  : userRole === "driver" 
+                  ? "bg-green-400 text-gray-900" 
+                  : "bg-pink-400 text-white"
+              }`}
+            >
+              {userRole?.toUpperCase() || "USER"}
+            </span>
+
+            {/* User Name */}
+            <span className="hidden sm:block text-sm font-medium">
+              {userData?.name || "User"}
+            </span>
+
+            {/* Logout Button */}
+            <button 
+              onClick={logout}
+              className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 border border-white border-opacity-30"
+            >
+              <FaSignOutAlt className="text-sm" />
+              <span className="text-sm font-medium">Logout</span>
+            </button>
+          </div>
         </div>
-      )}
-      <style>{`
-        @media (max-width: 900px) {
-          .nav-middle { display: none !important; }
-          .nav-mobile-toggle { display: inline-flex !important; align-items: center; justify-content: center; }
-        }
-      `}</style>
+
+        {/* Mobile Navigation */}
+        {menuOpen && links.length > 0 && (
+          <div className="md:hidden py-4 border-t border-white border-opacity-20 animate-slide-up">
+            <div className="space-y-2">
+              {links.map((link) => (
+                <Link
+                  key={`mobile-${link.to}`}
+                  to={link.to}
+                  onClick={() => setMenuOpen(false)}
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    location.pathname === link.to 
+                      ? 'bg-white bg-opacity-20' 
+                      : 'hover:bg-white hover:bg-opacity-10'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   );
 };
