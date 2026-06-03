@@ -13,7 +13,7 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
-
+//simulated db
 const run = async () => {
   const aadhaarRecords = [
     { aadhaarNumber: "111122223333", name: "Priya Sharma", gender: "Female", dob: "1998-05-10" },
