@@ -20,7 +20,7 @@ const run = async () => {
     { aadhaarNumber: "222233334444", name: "Neha Gupta", gender: "Female", dob: "2000-03-22" },
     { aadhaarNumber: "333344445555", name: "Anjali Singh", gender: "Female", dob: "1997-11-15" },
     { aadhaarNumber: "444455556666", name: "Ritu Verma", gender: "Female", dob: "2001-07-08" },
-    { aadhaarNumber: "555566667777", name: "Kavya Reddy", gender: "Female", dob: "1999-01-30" },
+    { aadhaarNumber: "666677778888", name: "Kavya Reddy", gender: "Female", dob: "1999-01-30" },
   ];
   const licenseRecords = [
     { licenseId: "DL001", name: "Ramesh Kumar", isValid: true },
