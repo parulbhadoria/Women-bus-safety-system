@@ -6,72 +6,96 @@
 
 ## Overview
 
-Women Bus Safety & Tracking System is a full-stack web application built to improve safety on public bus transit through real-time GPS tracking, role-based access for passengers, drivers, and admins, and a one-tap SOS emergency alert system. The platform aims to give passengers visibility into their journey and a fast, reliable way to signal distress when needed.
+Women Bus Safety & Tracking System is a full-stack web application designed to improve the safety of women using public bus transportation. The platform provides real-time bus tracking, role-based access for passengers, drivers, and administrators, and a one-tap SOS emergency alert system.
 
----
-
-## Demo
-
-**Live Demo:** 
+Passengers can monitor live bus locations, drivers can share their real-time GPS location, and administrators can oversee routes and respond to emergency alerts.
 
 ---
 
 ## Features
 
-* Role-based access with separate Passenger, Driver, and Admin modules
-* Real-time GPS tracking of buses using browser geolocation
-* Live route visualization on an interactive map
-* One-tap SOS emergency alert system
-* Instant email notifications on SOS trigger via Email.js
-* Real-time data synchronization across users using Firebase
-* Admin oversight of active routes and driver/passenger activity
+- Role-based authentication (Passenger, Driver, Admin)
+- Real-time GPS tracking using browser geolocation
+- Interactive route visualization with Leaflet and OpenStreetMap
+- One-tap SOS emergency alert system
+- Instant email notifications using EmailJS
+- Real-time synchronization with Firebase
+- Admin dashboard for monitoring buses, routes, and SOS alerts
+- Responsive user interface
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-* React.js
-* Leaflet.js
-* OpenStreetMap
+
+- React.js
+- Tailwind CSS
+- Leaflet.js
+- OpenStreetMap
 
 ### Backend
-* Node.js
-* Express.js
 
-### Real-time & Notifications
-* Firebase (real-time database/sync)
-* Email.js (instant SOS notifications)
+- Node.js
+- Express.js
+
+### Database & Services
+
+- Firebase Firestore
+- Firebase Authentication
+- Firebase Admin SDK
+- EmailJS
 
 ---
 
-## Roles & Modules
+## User Roles
 
-**Passenger**
-* View live bus location and route
-* Trigger SOS alert in emergencies
+### Passenger
 
-**Driver**
-* Share live GPS location while on route
-* View assigned route details
+- View live bus location
+- View assigned route
+- Trigger SOS alerts during emergencies
 
-**Admin**
-* Monitor all active buses and routes in real time
-* View SOS alerts and respond accordingly
+### Driver
+
+- Share real-time GPS location
+- View assigned route information
+
+### Admin
+
+- Monitor all active buses
+- View live locations
+- Monitor SOS alerts
+- Manage system activity
 
 ---
 
 ## Project Structure
 
 ```text
-src/
-├── components/
-├── modules/
-│   ├── passenger/
-│   ├── driver/
-│   └── admin/
-├── lib/
-└── App.jsx
+women-bus-safety/
+│
+├── client/
+│   ├── src/
+│   ├── package.json
+│   └── ...
+│
+├── server/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── routes/
+│   ├── .env
+│   ├── .env.example
+│   ├── serviceaccountkey.json
+│   ├── index.js
+│   └── package.json
+│
+├── firestore-seed/
+│   ├── seed.js
+│   └── package.json
+│
+└── README.md
 ```
 
 ---
@@ -79,70 +103,209 @@ src/
 ## Getting Started
 
 ### Prerequisites
-* Node.js (v18 or later)
-* npm
-* Firebase project
-* Email.js account
 
-### Clone Repository
+Make sure you have installed:
+
+- Node.js (v18 or later)
+- npm
+- Firebase Project
+- EmailJS Account
+
+---
+
+### Clone the Repository
+
 ```bash
 git clone https://github.com/parulbhadoria/Women-bus-safety-system.git
 cd Women-bus-safety-system
 ```
 
-### Install Dependencies
+---
+
+## Backend Setup
+
+Navigate to the server folder.
+
+```bash
+cd server
+```
+
+Install dependencies.
+
 ```bash
 npm install
 ```
 
 ### Configure Environment Variables
-Create a `.env` file in the project root:
+
+Create a `.env` file inside the `server` folder.
+
+You can use `.env.example` as a reference.
+
+Example:
+
 ```env
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-VITE_EMAILJS_SERVICE_ID=
-VITE_EMAILJS_TEMPLATE_ID=
-VITE_EMAILJS_PUBLIC_KEY=
+PORT=5000
+
+# Add your backend environment variables here
 ```
 
-### Run the Project
+### Configure Firebase Admin SDK
+
+This project uses the Firebase Admin SDK for secure backend operations.
+
+For security reasons, `serviceaccountkey.json` is **not included** in this repository.
+
+Generate a new Firebase Service Account key from:
+
+**Firebase Console → Project Settings → Service Accounts → Generate New Private Key**
+
+Place the downloaded file inside the `server` directory.
+
+Your folder should look like:
+
+```text
+server/
+│
+├── .env
+├── .env.example
+├── serviceaccountkey.json
+├── index.js
+└── package.json
+```
+
+> `serviceaccountkey.json` contains sensitive credentials and must never be committed to GitHub. It is already included in `.gitignore`.
+
+### Start the Backend Server
+
+```bash
+node index.js
+```
+
+The backend will run at:
+
+```
+http://localhost:5000
+```
+
+---
+
+## Frontend Setup
+
+Open a new terminal.
+
+Navigate to the client folder.
+
+```bash
+cd client
+```
+
+Install dependencies.
+
+```bash
+npm install
+```
+
+### Configure Environment Variables
+
+Create a `.env` file inside the `client` folder.
+
+```env
+VITE_FIREBASE_API_KEY=
+
+VITE_FIREBASE_AUTH_DOMAIN=
+
+VITE_FIREBASE_PROJECT_ID=
+
+VITE_FIREBASE_STORAGE_BUCKET=
+
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+
+VITE_FIREBASE_APP_ID=
+
+VITE_EMAILJS_SERVICE_ID=
+
+VITE_EMAILJS_TEMPLATE_ID=
+
+VITE_EMAILJS_PUBLIC_KEY=
+
+VITE_API_URL=http://localhost:5000
+```
+
+### Run the Frontend
+
 ```bash
 npm run dev
 ```
 
-Visit:
+Open your browser:
+
 ```
 http://localhost:5173
 ```
 
 ---
 
+## Firestore Seed (Optional)
+
+To populate Firestore with sample data:
+
+```bash
+cd firestore-seed
+
+npm install
+
+node seed.js
+```
+
+---
+
 ## How It Works
 
-1. Driver starts a route, sharing live GPS location.
-2. Passengers view the bus's real-time position and route on the map.
-3. In an emergency, the passenger triggers an SOS alert.
-4. Email.js sends an instant notification to configured emergency contacts/admin.
-5. Admin can view and respond to active SOS alerts in real time.
+1. Driver starts sharing live GPS location.
+2. Passengers can monitor the bus's live location and route.
+3. In an emergency, the passenger triggers the SOS button.
+4. EmailJS sends instant emergency notifications.
+5. The admin dashboard displays active buses and SOS alerts in real time.
 
 ---
 
 ## Future Improvements
 
-* SMS-based SOS alerts in addition to email
-* Push notifications for route delays
-* Driver verification system
-* Offline location caching for low-connectivity areas
+- SMS-based SOS alerts
+- Push notifications
+- Driver verification
+- Offline location caching
+- ETA prediction
+- Route history
+- Mobile application support
 
 ---
 
 ## Contributing
 
-Contributions and suggestions are welcome. Fork the repository, create a feature branch, and submit a pull request.
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a new feature branch.
+
+```bash
+git checkout -b feature-name
+```
+
+3. Commit your changes.
+
+```bash
+git commit -m "Add new feature"
+```
+
+4. Push the branch.
+
+```bash
+git push origin feature-name
+```
+
+5. Open a Pull Request.
 
 ---
 
@@ -155,5 +318,5 @@ This project is licensed under the MIT License.
 ## Author
 
 **Parul Bhadoria**
-Built using React, Node.js, Firebase, and Leaflet.js.
-```.
+
+Built using React, Node.js, Express.js, Firebase, Leaflet, OpenStreetMap, and EmailJS.
