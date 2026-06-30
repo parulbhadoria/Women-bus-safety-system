@@ -1,4 +1,3 @@
-```markdown
 # Women Bus Safety & Tracking System
 
 > A role-based real-time safety and tracking platform for women's public bus transit, enabling live location sharing, route visibility, and instant emergency alerts.
@@ -13,7 +12,7 @@ Women Bus Safety & Tracking System is a full-stack web application built to impr
 
 ## Demo
 
-**Live Demo:** [add link if deployed]
+**Live Demo:** 
 
 ---
 
